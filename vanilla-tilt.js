@@ -1,62 +1,48 @@
 var VanillaTilt = (function () {
 'use strict';
-
-
 class VanillaTilt {
   constructor(element, settings = {}) {
     if (!(element instanceof Node)) {
       throw ("Can't initialize VanillaTilt because " + element + " is not a Node.");
     }
-
     this.width = null;
     this.height = null;
     this.clientWidth = null;
     this.clientHeight = null;
     this.left = null;
     this.top = null;
-
     // for Gyroscope sampling
     this.gammazero = null;
     this.betazero = null;
     this.lastgammazero = null;
     this.lastbetazero = null;
-
     this.transitionTimeout = null;
     this.updateCall = null;
     this.event = null;
-
     this.updateBind = this.update.bind(this);
     this.resetBind = this.reset.bind(this);
-
     this.element = element;
     this.settings = this.extendSettings(settings);
-
     this.reverse = this.settings.reverse ? -1 : 1;
     this.glare = VanillaTilt.isSettingTrue(this.settings.glare);
     this.glarePrerender = VanillaTilt.isSettingTrue(this.settings["glare-prerender"]);
     this.fullPageListening = VanillaTilt.isSettingTrue(this.settings["full-page-listening"]);
     this.gyroscope = VanillaTilt.isSettingTrue(this.settings.gyroscope);
     this.gyroscopeSamples = this.settings.gyroscopeSamples;
-
     this.elementListener = this.getElementListener();
-
     if (this.glare) {
       this.prepareGlare();
     }
-
     if (this.fullPageListening) {
       this.updateClientSize();
     }
-
     this.addEventListeners();
     this.reset();
     this.updateInitialPosition();
   }
-
   static isSettingTrue(setting) {
     return setting === "" || setting === true || setting === 1;
   }
-
   /**
    * Method returns element what will be listen mouse events
    * @return {Node}
@@ -65,22 +51,17 @@ class VanillaTilt {
     if (this.fullPageListening) {
       return window.document;
     }
-
     if (typeof this.settings["mouse-event-element"] === "string") {
       const mouseEventElement = document.querySelector(this.settings["mouse-event-element"]);
-
       if (mouseEventElement) {
         return mouseEventElement;
       }
     }
-
     if (this.settings["mouse-event-element"] instanceof Node) {
       return this.settings["mouse-event-element"];
     }
-
     return this.element;
   }
-
   /**
    * Method set listen methods for this.elementListener
    * @return {Node}
@@ -95,16 +76,13 @@ class VanillaTilt {
     this.elementListener.addEventListener("mouseenter", this.onMouseEnterBind);
     this.elementListener.addEventListener("mouseleave", this.onMouseLeaveBind);
     this.elementListener.addEventListener("mousemove", this.onMouseMoveBind);
-
     if (this.glare || this.fullPageListening) {
       window.addEventListener("resize", this.onWindowResizeBind);
     }
-
     if (this.gyroscope) {
       window.addEventListener("deviceorientation", this.onDeviceOrientationBind);
     }
   }
-
   /**
    * Method remove event listeners from current this.elementListener
    */
@@ -112,42 +90,32 @@ class VanillaTilt {
     this.elementListener.removeEventListener("mouseenter", this.onMouseEnterBind);
     this.elementListener.removeEventListener("mouseleave", this.onMouseLeaveBind);
     this.elementListener.removeEventListener("mousemove", this.onMouseMoveBind);
-
     if (this.gyroscope) {
       window.removeEventListener("deviceorientation", this.onDeviceOrientationBind);
     }
-
     if (this.glare || this.fullPageListening) {
       window.removeEventListener("resize", this.onWindowResizeBind);
     }
   }
-
   destroy() {
     clearTimeout(this.transitionTimeout);
     if (this.updateCall !== null) {
       cancelAnimationFrame(this.updateCall);
     }
-
     this.reset();
-
     this.removeEventListeners();
     this.element.vanillaTilt = null;
     delete this.element.vanillaTilt;
-
     this.element = null;
   }
-
   onDeviceOrientation(event) {
     if (event.gamma === null || event.beta === null) {
       return;
     }
-
     this.updateElementPosition();
-
     if (this.gyroscopeSamples > 0) {
       this.lastgammazero = this.gammazero;
       this.lastbetazero = this.betazero;
-
       if (this.gammazero === null) {
         this.gammazero = event.gamma;
         this.betazero = event.beta;
@@ -155,10 +123,8 @@ class VanillaTilt {
         this.gammazero = (event.gamma + this.lastgammazero) / 2;
         this.betazero = (event.beta + this.lastbetazero) / 2;
       }
-
       this.gyroscopeSamples -= 1;
     }
-
     const totalAngleX = this.settings.gyroscopeMaxAngleX - this.settings.gyroscopeMinAngleX;
     const totalAngleY = this.settings.gyroscopeMaxAngleY - this.settings.gyroscopeMinAngleY;
 
